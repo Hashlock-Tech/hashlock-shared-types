@@ -57,8 +57,29 @@ export enum HTLCRole {
   COUNTERPARTY = 'counterparty',
 }
 
-/** The chain families Hashlock supports. */
-export type ChainType = 'evm' | 'sui' | 'bitcoin';
+/**
+ * The chain families Hashlock supports.
+ *
+ * Canonical form matches DB column `chain_type` and GraphQL enums:
+ *   'ethereum' | 'sui' | 'bitcoin'
+ *
+ * The legacy 'evm' literal was renamed in 0.2.0 to align with the wire format —
+ * if any consumer still types `'evm'`, normalize via `normalizeChainType()`.
+ */
+export type ChainType = 'ethereum' | 'sui' | 'bitcoin';
+
+/**
+ * Legacy alias kept for one minor version. Wallet/agent should migrate to ChainType.
+ * @deprecated Use ChainType ('ethereum' instead of 'evm').
+ */
+export type LegacyChainType = 'evm' | 'sui' | 'bitcoin';
+
+/** Coerce any legacy value to the canonical wire form. */
+export function normalizeChainType(input: string): ChainType {
+  if (input === 'evm') return 'ethereum';
+  if (input === 'ethereum' || input === 'sui' || input === 'bitcoin') return input;
+  throw new Error(`Unknown chain type: ${input}`);
+}
 
 /** Chain identifiers — numeric for EVM/Sui, sentinel ints for Bitcoin variants. */
 export const CHAIN_IDS = {
@@ -117,4 +138,34 @@ export interface RFQView {
   status: RFQStatus;
   expiresAt: string | null;
   createdAt: string;
+}
+
+/**
+ * GraphQL-aligned aliases — the trade-service SDL uses bare names (Trade, Quote,
+ * RFQ, Side, HTLC). These aliases let consumers `import { Trade } from '@hashlock-tech/shared-types'`
+ * and stay shape-compatible with codegen output. See trade-service/src/schema.ts.
+ */
+export type Trade = TradeView;
+export type Quote = QuoteView;
+export type RFQ = RFQView;
+export type Side = TradeSide;
+
+/**
+ * HTLC view — the row shape rendered by wallet/web for the htlcs table.
+ * Mirrors backend/shared/src/types/trading.ts HTLC and the GraphQL HTLC type.
+ */
+export interface HTLC {
+  id: string;
+  tradeId: string;
+  role: HTLCRole;
+  status: HTLCStatus;
+  chainType: ChainType;
+  hashlock: string;
+  timelock: number;
+  amount: string;
+  txHash?: string | null;
+  preimage?: string | null;
+  contractAddress?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }

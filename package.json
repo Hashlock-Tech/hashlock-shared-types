@@ -1,6 +1,6 @@
 {
   "name": "@hashlock-tech/shared-types",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Shared TypeScript types, HTLC contract addresses + ABIs, and theme tokens for Hashlock Markets",
   "license": "MIT",
   "repository": {
