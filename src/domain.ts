@@ -60,24 +60,19 @@ export enum HTLCRole {
 /**
  * The chain families Hashlock supports.
  *
- * Canonical form matches DB column `chain_type` and GraphQL enums:
- *   'ethereum' | 'sui' | 'bitcoin'
+ * Canonical wire form (DB column `htlcs.chain_type`, GraphQL String values,
+ * trade-service writes): `'evm' | 'sui' | 'bitcoin'`.
  *
- * The legacy 'evm' literal was renamed in 0.2.0 to align with the wire format —
- * if any consumer still types `'evm'`, normalize via `normalizeChainType()`.
+ * The string `'ethereum'` is NOT a wire value — it appears only in human-facing
+ * labels. Code paths that read DB or GraphQL must accept `'evm'`.
  */
-export type ChainType = 'ethereum' | 'sui' | 'bitcoin';
+export type ChainType = 'evm' | 'sui' | 'bitcoin';
 
-/**
- * Legacy alias kept for one minor version. Wallet/agent should migrate to ChainType.
- * @deprecated Use ChainType ('ethereum' instead of 'evm').
- */
-export type LegacyChainType = 'evm' | 'sui' | 'bitcoin';
-
-/** Coerce any legacy value to the canonical wire form. */
+/** Coerce a possibly-pretty value back to the canonical wire form. */
 export function normalizeChainType(input: string): ChainType {
-  if (input === 'evm') return 'ethereum';
-  if (input === 'ethereum' || input === 'sui' || input === 'bitcoin') return input;
+  if (input === 'ethereum' || input === 'EVM' || input === 'evm') return 'evm';
+  if (input === 'sui' || input === 'Sui' || input === 'SUI') return 'sui';
+  if (input === 'bitcoin' || input === 'btc' || input === 'BTC' || input === 'Bitcoin') return 'bitcoin';
   throw new Error(`Unknown chain type: ${input}`);
 }
 
